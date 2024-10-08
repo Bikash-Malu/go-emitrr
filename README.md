@@ -28,13 +28,13 @@ Before running the game, ensure you have the following installed:
    git clone https://github.com/Bikash-Malu/go-emitrr.git
 1. **Navigate to the Project Directory**
 
-   Open your terminal and run the following command to clone the repository:
+   Open your terminal and change the directory :
 
    ```bash
    cd go-emitrr
 1. **Run the Server**
 
-   Open your terminal and run the following command to clone the repository:
+   Open terminal and run the command to start server:
 
    ```bash
    go run main.go
