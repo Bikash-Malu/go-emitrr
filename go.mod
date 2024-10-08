@@ -1,6 +1,6 @@
 module exploding-kitten-server
 
-go 1.23.2
+go 1.23.0
 
 require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
