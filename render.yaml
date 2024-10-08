@@ -1,0 +1,8 @@
+version: 1
+services:
+  - type: web
+    name: my-go-app
+    env: go
+    buildCommand: go build -o my-go-app .
+    startCommand: ./my-go-app
+    autoDeploy: true
