@@ -25,13 +25,13 @@ Before running the game, ensure you have the following installed:
    Open your terminal and run the following command to clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/exploding-kitten.git
+   git clone https://github.com/Bikash-Malu/go-emitrr.git
 1. **Navigate to the Project Directory**
 
    Open your terminal and run the following command to clone the repository:
 
    ```bash
-   cd exploding-kitten
+   cd go-emitrr
 1. **Run the Server**
 
    Open your terminal and run the following command to clone the repository:
