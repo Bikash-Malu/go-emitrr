@@ -69,35 +69,35 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Username cannot be empty", http.StatusBadRequest)
         return
     }
-    existingPoints, err := client.HGet(ctx, request.Username, "points").Int()
+    currentPoints, err := client.HGet(ctx, request.Username, "points").Int()
     if err == redis.Nil {
-        existingPoints = 0
+        currentPoints = 0 
     } else if err != nil {
-        http.Error(w, "Failed to check user points", http.StatusInternalServerError)
+        http.Error(w, "Failed to get user points", http.StatusInternalServerError)
         return
     }
-    newPoints := existingPoints + request.Points
-
-    err = client.HSet(ctx, request.Username, "points", newPoints, "gameProgress", "{}").Err()
+    totalPoints := currentPoints + request.Points
+    err = client.HSet(ctx, request.Username, "points", totalPoints).Err()
     if err != nil {
-        http.Error(w, "Failed to update user points", http.StatusInternalServerError)
+        http.Error(w, "Failed to update points", http.StatusInternalServerError)
         return
     }
     deck := shuffleDeck()
     gameProgress := map[string]interface{}{"deck": deck, "currentCard": nil}
-    err = client.HSet(ctx, request.Username, "gameProgress", gameProgress).Err()
+    err = client.HSet(ctx, request.Username, "gameProgress", toJsonString(gameProgress)).Err()
     if err != nil {
         http.Error(w, "Failed to update game progress", http.StatusInternalServerError)
         return
     }
+
     response := map[string]interface{}{
         "deck":     deck,
-        "points":   newPoints,
         "message":  "Game Started!",
         "gameOver": false,
     }
     json.NewEncoder(w).Encode(response)
 }
+
 
 func drawCardHandler(w http.ResponseWriter, r *http.Request) {
     var request struct {
@@ -118,7 +118,11 @@ func drawCardHandler(w http.ResponseWriter, r *http.Request) {
     request.Deck = request.Deck[:len(request.Deck)-1]
 
     gameProgress := map[string]interface{}{"deck": request.Deck, "currentCard": drawnCard}
-    client.HSet(ctx, request.Username, "gameProgress", gameProgress)
+    err := client.HSet(ctx, request.Username, "gameProgress", toJsonString(gameProgress)).Err()
+    if err != nil {
+        http.Error(w, "Failed to update game progress", http.StatusInternalServerError)
+        return
+    }
 
     currentPoints, err := client.HGet(ctx, request.Username, "points").Int()
     if err != nil {
@@ -155,6 +159,7 @@ func drawCardHandler(w http.ResponseWriter, r *http.Request) {
 
     json.NewEncoder(w).Encode(response)
 }
+
 func getLeaderboardHandler(w http.ResponseWriter, r *http.Request) {
     users, err := client.Keys(ctx, "*").Result()
     if err != nil {
@@ -181,6 +186,7 @@ func getLeaderboardHandler(w http.ResponseWriter, r *http.Request) {
 
     json.NewEncoder(w).Encode(leaderboard)
 }
+
 func shuffleDeck() []string {
     deck := []string{"cat", "bomb", "defuse", "shuffle"}
     rand.Seed(time.Now().UnixNano())
@@ -188,4 +194,9 @@ func shuffleDeck() []string {
         deck[i], deck[j] = deck[j], deck[i]
     })
     return deck
+}
+
+func toJsonString(data map[string]interface{}) string {
+    jsonData, _ := json.Marshal(data)
+    return string(jsonData)
 }
