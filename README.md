@@ -7,7 +7,6 @@ Exploding Kitten is a fun and engaging card game where players draw cards and tr
 ## Features
 
 - Multiplayer support
-- Player management (add, remove, and manage players)
 - Game logic to handle card drawing and winning conditions
 - User-friendly interface
 
