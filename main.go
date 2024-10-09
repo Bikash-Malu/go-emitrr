@@ -69,13 +69,20 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Username cannot be empty", http.StatusBadRequest)
         return
     }
-
-    err := client.HSet(ctx, request.Username, "points", request.Points, "gameProgress", "{}").Err()
-    if err != nil {
-        http.Error(w, "Failed to create user", http.StatusInternalServerError)
+    existingPoints, err := client.HGet(ctx, request.Username, "points").Int()
+    if err == redis.Nil {
+        existingPoints = 0
+    } else if err != nil {
+        http.Error(w, "Failed to check user points", http.StatusInternalServerError)
         return
     }
+    newPoints := existingPoints + request.Points
 
+    err = client.HSet(ctx, request.Username, "points", newPoints, "gameProgress", "{}").Err()
+    if err != nil {
+        http.Error(w, "Failed to update user points", http.StatusInternalServerError)
+        return
+    }
     deck := shuffleDeck()
     gameProgress := map[string]interface{}{"deck": deck, "currentCard": nil}
     err = client.HSet(ctx, request.Username, "gameProgress", gameProgress).Err()
@@ -83,14 +90,15 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Failed to update game progress", http.StatusInternalServerError)
         return
     }
-
     response := map[string]interface{}{
         "deck":     deck,
+        "points":   newPoints,
         "message":  "Game Started!",
         "gameOver": false,
     }
     json.NewEncoder(w).Encode(response)
 }
+
 func drawCardHandler(w http.ResponseWriter, r *http.Request) {
     var request struct {
         Username string   `json:"username"`
